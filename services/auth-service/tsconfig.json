@@ -23,13 +23,14 @@
     "moduleResolution": "NodeNext",
     "baseUrl": "./",
     "ignoreDeprecations": "6.0",
+    "types": ["node", "jest"],
     "paths": {
       "@/*":["./src/*"],
-      "@shared*":["../../shared/*"]
+      "@shared*": ["../../shared/*"]
     }
   },
   "include": [
-    "src/**/*", "../../shared/**/*"
+    "src/**/*", "tests/**/*", "../../shared/**/*"
   ],
   "exclude": [
     "node_modules",
