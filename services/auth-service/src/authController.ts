@@ -1,13 +1,16 @@
 import { AuthService } from "./authService";
 import { asyncHandler } from "../../../shared/middleware";
-import { createSuccessResponse } from "../../../shared/utils";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from "../../../shared/utils";
 import { Request, Response } from "express";
 const authService = new AuthService();
 
 export const register = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const tokens = await authService.register(email, password);
-  res
+  return res
     .status(201)
     .json(createSuccessResponse(tokens, "User registered successfully"));
 });
@@ -15,7 +18,71 @@ export const register = asyncHandler(async (req: Request, res: Response) => {
 export const login = asyncHandler(async (req: Request, res: Response) => {
   const { email, password } = req.body;
   const tokens = await authService.login(email, password);
-  res
+  return res
     .status(200)
     .json(createSuccessResponse(tokens, "User logged in successfully"));
+});
+
+export const refreshTokens = asyncHandler(
+  async (req: Request, res: Response) => {
+    const { refreshToken } = req.body;
+    const tokens = await authService.refreshToken(refreshToken);
+    return res
+      .status(200)
+      .json(createSuccessResponse(tokens, "Tokens refreshed successfully"));
+  },
+);
+
+export const logout = asyncHandler(async (req: Request, res: Response) => {
+  const { refreshToken } = req.body;
+  await authService.logout(refreshToken);
+  return res
+    .status(200)
+    .json(createSuccessResponse(null, "User logged out successfully"));
+});
+
+export const validateToken = asyncHandler(
+  async (req: Request, res: Response) => {
+    const authHeader = req.headers["authorization"];
+    const token = authHeader && authHeader.split(" ")[1];
+    if (!token) {
+      return res.status(401).json(createErrorResponse("No token provided"));
+    }
+
+    const payload = await authService.validateToken(token);
+    return res
+      .status(200)
+      .json(createSuccessResponse(payload, "Token is valid"));
+  },
+);
+
+export const getProfile = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json(createErrorResponse("Unauthorized"));
+  }
+
+  const user = await authService.getUserById(userId);
+
+  if (!user) {
+    return res.status(404).json(createErrorResponse("User not found"));
+  }
+
+  return res
+    .status(200)
+    .json(createSuccessResponse(user, "Profile retrieved successfully"));
+});
+
+export const deleteUser = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user?.id;
+
+  if (!userId) {
+    return res.status(401).json(createErrorResponse("Unauthorized"));
+  }
+
+  await authService.deleteUser(userId);
+  return res
+    .status(200)
+    .json(createSuccessResponse(null, "Account deleted successfully"));
 });
