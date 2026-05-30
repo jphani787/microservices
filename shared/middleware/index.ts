@@ -1,4 +1,14 @@
+import { createErrorResponse } from "./../../shared/utils";
+import { logError, ServiceError } from "./../../shared/types";
 import { Request, Response, NextFunction } from "express";
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: any;
+    }
+  }
+}
 
 export function asyncHandler(
   fn: (req: Request, res: Response, next: NextFunction) => Promise<any>,
@@ -26,4 +36,25 @@ export function validateRequest(schema: any) {
     }
     next();
   };
+}
+
+export function errorHandler(
+  error: ServiceError,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  logError(error, {
+    method: req.method,
+    url: req.url,
+    body: req.body,
+    params: req.params,
+    query: req.query,
+  });
+
+  const statusCode = error.statusCode || 500;
+  const message = error.message || "Internal Server Error";
+
+  res.status(statusCode).json(createErrorResponse(message));
+  next();
 }
