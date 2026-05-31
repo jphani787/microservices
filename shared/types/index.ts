@@ -7,6 +7,33 @@ export interface User {
   updatedAt: Date;
 }
 
+export interface UserProfile {
+  id: string;
+  userId: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  prefrences?: any;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UpdateUserProfile {
+  firstName?: string | null;
+  lastName?: string | null;
+  bio?: string | null;
+  avatarUrl?: string | null;
+  prefrences?: Record<string, any> | null;
+}
+
+export interface ServiceResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  statusCode?: number;
+}
+
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
