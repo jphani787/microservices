@@ -1,3 +1,5 @@
+// @ts-ignore
+import jwt, { JwtPayload } from "jsonwebtoken";
 import { createErrorResponse } from "./../../shared/utils";
 import { logError, ServiceError } from "./../../shared/types";
 import { Request, Response, NextFunction } from "express";
@@ -8,6 +10,32 @@ declare global {
       user?: any;
     }
   }
+}
+
+export function authenticateToken(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  const authHeader = req.headers["authorization"];
+  const token = authHeader && authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json(createErrorResponse("Access token required"));
+  }
+
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    logError(new Error("JWT_SECRET is not defined"));
+    return res.status(500).json(createErrorResponse("Internal Server Error"));
+  }
+
+  jwt.verify(token, jwtSecret, (err: any, decoded: any) => {
+    if (err) {
+      return res.status(403).json(createErrorResponse("Invalid token"));
+    }
+    req.user = decoded as JwtPayload;
+    next();
+  });
 }
 
 export function asyncHandler(
@@ -57,4 +85,13 @@ export function errorHandler(
 
   res.status(statusCode).json(createErrorResponse(message));
   next();
+}
+
+export function corsOptions() {
+  return {
+    origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+    credentials: process.env.CORS_CREDENTIALS === "true",
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  };
 }

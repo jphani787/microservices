@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as authController from "./authController";
-import { validateRequest } from "../../../shared/middleware";
+import { validateRequest, authenticateToken } from "../../../shared/middleware";
 import { loginSchema, registerSchema, refreshTokenSchema } from "./validation";
 
 const router = Router();
@@ -26,7 +26,8 @@ router.post(
 );
 
 router.post("/validate", authController.validateToken);
-router.get("/profile", authController.getProfile);
-router.delete("/profile", authController.deleteUser);
+
+router.get("/profile", authenticateToken, authController.getProfile);
+router.delete("/profile", authenticateToken, authController.deleteUser);
 
 export default router;
